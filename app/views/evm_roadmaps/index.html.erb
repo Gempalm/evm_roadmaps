@@ -1,0 +1,240 @@
+<h2><%=  l(:evm_roadmaps_name) %></h2>
+
+<div id="roadmap">
+
+  <% @results.each do |vo| %>
+    <h3 class="icon22 icon22-package">
+      <%= link_to vo.project_name, {:controller => 'projects', :action => 'show', :id => vo.project_identifier} %> - 
+      <%= link_to vo.name, {:controller => 'versions', :action => 'show', :id => vo.version_id} %>
+      <span style="font-size:0.7em;">
+        <%= link_to l(:edit), {:controller => 'versions', :action => 'edit', :id => vo.version_id} %>
+      </span>
+    </h3>
+
+    <div style="padding-bottom:5px;text-align:center;">
+      <table class="progress" style="width:70%;height:2em;">
+        <tr>
+          <% if vo.finish_percentage == 0 &&  vo.unfinish_percentage == 0 %>
+            <td class="todo" style="width: 100%;"></td>
+          <% elsif vo.unfinish_percentage == 100 %>
+            <td class="todo" style="width:100%;"></td>
+          <% elsif vo.finish_percentage == 100 %>
+            <td class="closed" style="width:100%;"></td>
+          <% else %>
+            <td class="closed" style="width: <%=vo.finish_percentage%>%;"></td>
+            <td class="todo" style="width:<%=vo.unfinish_percentage%>%;"></td>
+          <% end %>
+        </tr>
+      </table>
+      <div style="font-size:1.8em;text-align:left;">
+        <span style="font-size:0.6rem;"><%=l(:issues_base)%>&nbsp;&nbsp;&nbsp;</span>
+        <%= vo.finish_percentage %>%
+      </div>
+    </div>
+
+    <div style="padding-bottom:5px;text-align:center;">
+      <table class="progress" style="width:70%;height:2em;">
+        <tr>
+          <% if vo.percent_of_completion == 0 %>
+            <td class="todo" style="width: 100%;"></td>
+          <% elsif vo.percent_of_completion == 100 %>
+            <td class="closed" style="width:100%;"></td>
+          <% else %>
+            <td class="closed" style="width: <%=vo.percent_of_completion%>%;"></td>
+            <td class="todo" style="width:<%=100 - vo.percent_of_completion%>%;"></td>
+          <% end %>
+        </tr>
+      </table>
+      <div style="font-size:1.8em;text-align:left;">
+        <span style="font-size:0.6rem;"><%=l(:spent_time_base)%>&nbsp;&nbsp;&nbsp;</span>
+        <%= vo.percent_of_completion %>%
+      </div>
+    </div>
+
+    <table class="list issues">
+      <tr>
+        <th><%=l(:descripton)%></th>
+        <td colspan="3">
+          <%= vo.description %>
+        </td>
+        <th><%=l(:assigned_users)%></th>
+        <td colspan="3">
+          <% count = 0 %>
+          <% vo.assigned_users.each do |user| %>
+            <% count += 1 %>
+            <%= link_to user.lastname, {:controller => 'users', :action => 'show', :id => user.id} %>
+            (<%=user.count%>)
+            <% if count < vo.assigned_users.size %>
+              ,&nbsp;&nbsp;
+            <% end %>
+          <% end %>
+        </td>
+      <tr>
+        <th><%=l(:ticket_status)%></th>
+        <td>
+          <%= link_to vo.finish_num, project_issues_path(vo.project_identifier, :status_id => 'c', :fixed_version_id => vo.version_id, :set_filter => '1') %>
+          <%= l(:finished) %>(<%= vo.finish_percentage %>%),&#160;
+          <%= link_to vo.unfinish_num, project_issues_path(vo.project_identifier, :fixed_version_id => vo.version_id, :set_filter => '1', :status_id => 'o') %>
+          <%= l(:unfinished) %>(<%= vo.unfinish_percentage %>%)
+        </td>
+        <th><%=l(:version_start_date)%></th>
+        <td>
+          <% if vo.start_date == nil %>
+            <strong style="color:red;"><%=l(:no_version_start_date)%></strong>
+          <% else %>
+            <%=vo.start_date.to_s%>
+          <% end %>
+        </td>
+        <th><%=l(:version_effective_date)%></th>
+        <td>
+          <% if vo.effective_date == nil %>
+            <strong style="color:red;"><%=l(:no_version_effective_date)%></strong>
+          <% elsif vo.effective_date < Date::today %>
+            <strong style="color:red;"><%=vo.effective_date.to_s%></strong>
+          <% else %>
+            <%=vo.effective_date.to_s%>
+          <% end %>
+
+          <% if vo.late < 0 %>
+            <strong style="color:red;">(<%=l(:late, :days => vo.late.abs)%>)</strong>
+          <% else %>
+            (<%= l(:days_to_go, :days => vo.late) %>)
+          <% end %>
+        </td>
+        <th><%=l(:actual_date)%></th>
+        <td>
+          <% if vo.start_date == nil && vo.due_date == nil %>
+            <strong style="color:red;"><%=l(:no_date)%></strong>
+          <% elsif vo.start_date == nil %>
+            <strong style="color:red;"><%=l(:no_start_date)%></strong>~<%=vo.due_date.to_s%>
+          <% elsif vo.due_date == nil %>
+            <%=vo.start_date.to_s%>~<strong style="color:red;"><%=l(:no_due_date)%></strong>
+          <% else %>
+            <%=vo.start_date.to_s%>~<%=vo.due_date.to_s%>
+          <% end %>
+        </td>
+      </tr>
+      <tr>
+        <th><%=l(:budget_at_completion)%></th>
+        <td>
+          <%= vo.budget_at_completion %>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:actual_cost)%></th>
+        <td>
+          <%=vo.actual_cost%>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:planned_value)%></th>
+        <td>
+          <%= vo.planned_value %>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:earned_value)%></th>
+        <td>
+          <%= vo.earned_value %>
+          <%= l(:hours) %>
+        </td>
+      </tr>
+      <tr>
+        <th><%=l(:schedule_value)%></th>
+        <td>
+          <% if vo.schedule_value < 0 %>
+            <strong style="color:red;"><%= vo.schedule_value %></strong>
+          <% else %>
+            <%= vo.schedule_value %>
+          <% end %>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:cost_variance)%></th>
+        <td>
+          <% if vo.cost_variance < 0 %>
+            <strong style="color:red;"><%= vo.cost_variance %></strong>
+          <% else %>
+            <%= vo.cost_variance %>
+          <% end %>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:schedule_performance_index)%></th>
+        <td>
+          <% if vo.schedule_performance_index < 1 %>
+            <strong style="color:red;"><%= vo.schedule_performance_index %></strong>
+          <% else %>
+            <%= vo.schedule_performance_index %>
+          <% end %>
+        </td>
+        <th><%=l(:cost_performance_index)%></th>
+        <td>
+          <% if vo.cost_performance_index < 1 %>
+            <strong style="color:red;"><%= vo.cost_performance_index %></strong>
+          <% else %>
+            <%= vo.cost_performance_index %>
+          <% end %>
+        </td>
+      </tr>
+      <tr>
+        <th><%=l(:critical_ratio)%></th>
+        <td>
+          <% if vo.critical_ratio < 1 %>
+            <strong style="color:red;"><%= vo.critical_ratio %></strong>
+          <% else %>
+            <%= vo.critical_ratio %>
+          <% end %>
+        </td>
+        <th><%=l(:to_complete_performance_index)%></th>
+        <td>
+          <% if vo.to_complete_performance_index > 1 %>
+            <strong style="color:red;"><%= vo.to_complete_performance_index %></strong>
+          <% else %>
+            <%= vo.to_complete_performance_index %>
+          <% end %>
+        </td>
+        <th><%=l(:estimate_at_completion)%></th>
+        <td>
+          <%= vo.estimate_at_completion %>
+          <%= l(:hours) %>
+        </td>
+        <th><%=l(:variance_at_completion)%></th>
+        <td>
+          <% if vo.variance_at_completion < 0.0 %>
+            <strong style="color:red;"><%= vo.variance_at_completion %></strong>
+          <% else %>
+            <%= vo.variance_at_completion %>
+          <% end %>
+        </td>
+      </tr>
+      <tr>
+        <th><%=l(:schedule_at_completion)%></th>
+        <td>
+          <%= vo.schedule_at_completion %>
+        </td>
+        <th><%=l(:time_estimate_at_completion)%></th>
+        <td>
+          <%= vo.time_estimate_at_completion %>
+        </td>
+        <th><%=l(:time_variance_at_completion)%></th>
+        <td>
+          <% if vo.time_variance_at_completion < 0.0 %>
+            <strong style="color:red;"><%= vo.time_variance_at_completion %></strong>
+          <% else %>
+            <%= vo.time_variance_at_completion %>
+          <% end %>
+        </td>
+        <th><%=l(:predictive_completion_date)%></th>
+        <td>
+          <% if vo.effective_date == nil %>
+            <%= vo.predictive_completion_date %>
+          <% elsif vo.effective_date < Date::today %>
+            <strong style="color:red;"><%=vo.predictive_completion_date.to_s%></strong>
+          <% elsif vo.effective_date < vo.predictive_completion_date %>
+            <strong style="color:red;"><%=vo.predictive_completion_date.to_s%></strong>
+          <% else %>
+            <%=vo.predictive_completion_date.to_s%>
+          <% end %>
+        </td>
+      </tr>
+    </table>
+
+    <div style="padding:15px 15px"></div>
+  <% end %>
+</div>
